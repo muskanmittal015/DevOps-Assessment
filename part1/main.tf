@@ -51,13 +51,13 @@ resource "aws_subnet" "private" {
   cidr_block        = "10.0.${count.index + 11}.0/24"
   availability_zone = data.aws_availability_zones.available.names[count.index]
 }
-resource "aws_subnet" "private" {
-  count = 2
+resource "aws_route_table" "public" {
+  vpc_id = aws_vpc.main.id
 
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = "10.0.${count.index + 11}.0/24"
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-}
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.main.id
+  }
 resource "aws_route_table_association" "public" {
   count = 2
 
@@ -112,7 +112,7 @@ resource "aws_security_group" "alb" {
   }
   resource "aws_security_group" "ecs" {
   name        = "${local.name}-ecs-sg"
-  description = "Security group for ECS Fargate tasks"
+  description = "Security group for ECS tasks"
   vpc_id      = aws_vpc.main.id
 
   ingress {
@@ -133,7 +133,7 @@ resource "aws_security_group" "alb" {
   }
   resource "aws_security_group" "rds" {
   name        = "${local.name}-rds-sg"
-  description = "Security group for private PostgreSQL RDS"
+  description = "Security group for private RDS"
   vpc_id      = aws_vpc.main.id
 
   ingress {
